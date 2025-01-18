@@ -1,29 +1,40 @@
-import mongoose from 'mongoose';
+import { MongoClient, ServerApiVersion } from 'mongodb';
 
-global.mongoose = {
-    conn: null, // storing connection here
-    promise: null,
-};
+const uri = process.env.MONGODB_URI;
 
-export async function dbConnect() {
-    if (global.mongoose && global.mongoose.conn) {
-        console.log('Using existing connection');
-        return global.mongoose.conn;
-    } else {
-        const conString = process.env.MONGODB_URI;
+let client;
+let clientPromise;
 
-        const promise = mongoose.connect(conString, {
-            autoIndex: true,
-        });
-
-        global.mongoose = {
-            conn: await promise,
-            promise,
-        }
-        console.log('Connected to MongoDB');
-
-        return await promise;
-    }
+if (process.env.NODE_ENV === 'development') {
+  if (!global._mongoClientPromise) {
+    global._mongoClientPromise = MongoClient.connect(uri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      },
+      useNewUrlParser: true, // MongoDB new connection parser
+      useUnifiedTopology: true, // Enable the new connection management engine
+      connectTimeoutMS: 30000, // Increase connection timeout
+      socketTimeoutMS: 30000, // Increase socket timeout
+    });
+  }
+  clientPromise = global._mongoClientPromise;
+} else {
+  clientPromise = MongoClient.connect(uri, {
+    serverApi: {
+      version: ServerApiVersion.v1,
+      strict: true,
+      deprecationErrors: true,
+    },
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    connectTimeoutMS: 30000,
+    socketTimeoutMS: 30000,
+  });
 }
 
-// With great help from https://youtu.be/FQeKzno-8mU
+export async function connectToDatabase() {
+  client = await clientPromise;
+  return client.db();
+}
