@@ -1,40 +1,49 @@
+// lib/mongodb.js
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
+if (!process.env.MONGODB_URI) {
+  throw new Error('Please add your MongoDB URI to .env.local');
+}
+
 const uri = process.env.MONGODB_URI;
+
+const options = {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+  maxPoolSize: 10, // Limit the number of connections in the pool
+  connectTimeoutMS: 30000,
+  socketTimeoutMS: 30000,
+};
 
 let client;
 let clientPromise;
 
 if (process.env.NODE_ENV === 'development') {
+  // In development mode, use a global variable to preserve connection across HMR
   if (!global._mongoClientPromise) {
-    global._mongoClientPromise = MongoClient.connect(uri, {
-      serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-      },
-      useNewUrlParser: true, // MongoDB new connection parser
-      useUnifiedTopology: true, // Enable the new connection management engine
-      connectTimeoutMS: 30000, // Increase connection timeout
-      socketTimeoutMS: 30000, // Increase socket timeout
-    });
+    client = new MongoClient(uri, options);
+    global._mongoClientPromise = client.connect();
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  clientPromise = MongoClient.connect(uri, {
-    serverApi: {
-      version: ServerApiVersion.v1,
-      strict: true,
-      deprecationErrors: true,
-    },
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    connectTimeoutMS: 30000,
-    socketTimeoutMS: 30000,
-  });
+  // In production, create a new connection
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
 }
 
 export async function connectToDatabase() {
-  client = await clientPromise;
-  return client.db();
+  try {
+    const client = await clientPromise;
+    const db = client.db(process.env.MONGODB_DB || 'pet-adoption');
+    return db;
+  } catch (error) {
+    console.error('Failed to connect to database:', error);
+    throw error;
+  }
 }
+
+// Export clientPromise for use in other files if needed
+export default clientPromise;
