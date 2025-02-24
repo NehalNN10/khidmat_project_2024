@@ -1,7 +1,13 @@
+// import { SAMPLE_PETS } from '@/constants/index.js';
+// import { SAMPLE_PETS } from '@/constants/index.js';
+
+// TODO: import sample pets from the constants file and finish this stuff please
+
 // scripts/seed.js
 const { MongoClient } = require('mongodb');
 const dotenv = require('dotenv');
 const path = require('path');
+const { SAMPLE_PETS } = require('../constants');
 
 // Load environment variables from the root .env.local file
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
@@ -37,7 +43,8 @@ async function seedDatabase() {
     console.log('Cleared existing pets data');
 
     // Insert new data
-    const result = await petsCollection.insertMany(seedData);
+    // const result = await petsCollection.insertMany(seedData);
+    const result = await petsCollection.insertMany(SAMPLE_PETS);
     console.log(`Successfully seeded ${result.insertedCount} pets`);
 
     // Create indexes

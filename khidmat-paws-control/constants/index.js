@@ -1,4 +1,5 @@
 // Name is what is shown on frontend, slug is what is used for routing
+// TODO review
 
 export const categoryPicArr = [
   {
