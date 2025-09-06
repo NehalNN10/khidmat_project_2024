@@ -1,11 +1,11 @@
 import { google } from 'googleapis';
 
-const CLIENT_ID = "placeholder";
-const CLIENT_SECRET = "placeholder";
-const REDIRECT_URI = "https://developers.google.com/oauthplayground";
-const REFRESH_TOKEN = "placeholder";
-const PARENT_FOLDER_ID = "placeholder"; 
-const BOUGHT_FOLDER_ID = "placeholder";
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
+const PARENT_FOLDER_ID = process.env.PARENT_FOLDER_ID; 
+const BOUGHT_FOLDER_ID = process.env.BOUGHT_FOLDER_ID;
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
@@ -25,7 +25,40 @@ const drive = google.drive({
 const FOLDER_TO_MOVE = "3" // testing
 
 export async function GET() {
+  // Debug environment variables first
+  console.log('Environment variables check:', {
+    CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'Present' : 'Missing',
+    REFRESH_TOKEN: process.env.REFRESH_TOKEN ? 'Present' : 'Missing',
+    REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+  });
+
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    return new Response(JSON.stringify({ 
+      error: 'GOOGLE_CLIENT_ID environment variable is not set' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  
   try {
+    // Test 1: Simple credentials test
+    console.log('Testing credentials...');
+    const testResponse = await drive.files.list({
+      pageSize: 1,
+      fields: 'files(id, name)',
+    });
+    console.log('Credentials test passed:', testResponse.data);
+
+    // Test 2: Check if PARENT_FOLDER_ID exists and is accessible
+    console.log('Testing parent folder access...');
+    const folderTest = await drive.files.get({
+      fileId: PARENT_FOLDER_ID,
+      fields: 'id, name, mimeType'
+    });
+    console.log('Parent folder test passed:', folderTest.data);
+
     // Step 1: List subfolders within the PARENT_FOLDER
     const subfoldersResponse = await drive.files.list({
       q: `'${PARENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'`,
@@ -63,20 +96,27 @@ export async function GET() {
     });
   } catch (error) {
     // Debugging: Log any errors
-    console.error('API Error:', error);
+    console.error('Detailed error:', {
+      message: error.message,
+      status: error.status,
+      statusText: error.statusText,
+      details: error.response?.data
+    });
 
     // Return the error message as JSON
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: error.response?.data 
+    }), {
       status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
 
 // New function to move the folder "3" into the "BOUGHT" folder
-export async function moveFolderToBought() {
+// export async function moveFolderToBought() {
+export async function POST() {
   try {
     // Step 1: Find the folder ID by name
     const folderResponse = await drive.files.list({
@@ -121,16 +161,3 @@ export async function moveFolderToBought() {
     });
   }
 }
-
-let hasMovedFolder = false;
-
-// Function to run the moveFolderToBought function once
-async function runOnce() {
-  if (!hasMovedFolder) {
-    await moveFolderToBought();
-    hasMovedFolder = true;
-  }
-}
-
-// Run the function once at the start
-runOnce();
