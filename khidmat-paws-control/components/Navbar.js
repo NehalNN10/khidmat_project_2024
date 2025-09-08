@@ -10,13 +10,16 @@ const Navbar = () => {
       {/* nav links */}
       <div className="flex flex-row items-center justify-end space-x-8">
         <div>
-          <Link href="/">View Pets</Link>
+          <Link href="/drive">Drive Files</Link>
         </div>
         <div>
-          <Link href="/">About us</Link>
+          <Link href="/pets">View Pets</Link>
         </div>
         <div>
-          <Link href="/">Contact</Link>
+          <Link href="/about-us">About us</Link>
+        </div>
+        <div>
+          <Link href="/contact-us">Contact</Link>
         </div>
       </div>
     </nav>
