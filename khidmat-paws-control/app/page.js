@@ -1,10 +1,13 @@
-import DriveFiles from '../components/DriveFiles';
+import Hero from "@/components/Hero";
+import FeaturedPets from "@/components/FeaturedPets"
+import BrowseCategories from "@/components/BrowseCategories"
 
 export default function Home() {
   return (
     <>
-      <h1>Welcome to My App</h1>
-      <DriveFiles />
+      <Hero/>
+      <FeaturedPets/>
+      <BrowseCategories/>
     </>
   );
 }
