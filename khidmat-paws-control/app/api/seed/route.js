@@ -4,18 +4,19 @@ import Media from '@/lib/models/media';
 import Customer from '@/lib/models/customer';
 import AdoptionStatus from '@/lib/models/adoptionstatus';
 
-export async function POST(req) {
+export async function POST(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
+  }
+
   try {
     // Connect to the database
-    const db = await connectToDatabase();
+    await connectToDatabase();
 
     // Check if the database is already seeded
     const existingAnimals = await Animal.countDocuments();
     if (existingAnimals > 0) {
-      return new Response(
-        JSON.stringify({ message: 'Database is already seeded.' }),
-        { status: 400 }
-      );
+      return res.status(400).json({ message: 'Database is already seeded.' });
     }
 
     // Seed 50 animals
@@ -68,15 +69,9 @@ export async function POST(req) {
 
     await AdoptionStatus.insertMany(adoptionStatuses);
 
-    return new Response(
-      JSON.stringify({ message: 'Database seeded successfully!' }),
-      { status: 200 }
-    );
+    return res.status(200).json({ message: 'Database seeded successfully!' });
   } catch (error) {
     console.error('Error seeding the database:', error);
-    return new Response(
-      JSON.stringify({ message: 'Error seeding the database' }),
-      { status: 500 }
-    );
+    return res.status(500).json({ message: 'Error seeding the database' });
   }
 }

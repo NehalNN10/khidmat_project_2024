@@ -1,12 +1,21 @@
-// lib/models/Animal.js
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
 const animalSchema = new mongoose.Schema({
+  animal_id: {
+    type: Number,
+    required: true,
+    unique: true,
+    autoIncrement: true,
+  },
   name: { type: String, required: true },
-  description: { type: String },
-  status: { type: String },
+  // description: { type: String, required: true },
+  description: { type: String},
+  category_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    required: true,
+  },
 });
 
-const Animal = mongoose.models.Animal || mongoose.model('Animal', animalSchema);
-
-export default Animal;
+const Animal = mongoose.model("Animal", animalSchema);
+module.exports = Animal;

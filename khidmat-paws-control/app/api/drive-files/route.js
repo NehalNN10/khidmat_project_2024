@@ -1,5 +1,8 @@
 import { google } from 'googleapis';
+import {connectToDatabase} from '@/lib/db'; // Import DB connection
+import Media from '@/lib/models/media';
 
+// OAuth2 Setup for Google Drive API
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
@@ -43,6 +46,7 @@ export async function GET() {
   }
   
   try {
+
     // Test 1: Simple credentials test
     console.log('Testing credentials...');
     const testResponse = await drive.files.list({
@@ -59,7 +63,7 @@ export async function GET() {
     });
     console.log('Parent folder test passed:', folderTest.data);
 
-    // Step 1: List subfolders within the PARENT_FOLDER
+    // Step 2: List subfolders within the PARENT_FOLDER
     const subfoldersResponse = await drive.files.list({
       q: `'${PARENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'`,
       fields: 'files(id, name)',
@@ -68,18 +72,19 @@ export async function GET() {
     const subfolders = subfoldersResponse.data.files;
     console.log('Subfolders:', subfolders);
 
-    // Step 2: List images within each subfolder
+    // Step 3: List images within each subfolder
     let allImages = [];
     for (const subfolder of subfolders) {
       const imagesResponse = await drive.files.list({
         q: `'${subfolder.id}' in parents and (mimeType='image/jpeg' or mimeType='image/png')`,
         fields: 'files(id, name, mimeType)',
       });
-      const images = imagesResponse.data.files.map(file => ({
+      const images = imagesResponse.data.files.map((file) => ({
         id: file.id,
         name: file.name,
         mimeType: file.mimeType,
         parentFolderName: subfolder.name,
+        media_url: `https://drive.google.com/uc?export=view&id=${file.id}`,
       }));
       allImages = allImages.concat(images);
     }

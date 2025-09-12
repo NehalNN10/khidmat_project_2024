@@ -45,3 +45,13 @@ Some notes for what is where:
 - public folder will contain any static assets like logos etc.
 
 - package.json has main configuration for running app etc and is updated automatically as we add more packages/libraries
+
+## To seed database
+
+Just run the following command in the terminal:
+
+```
+node scripts/seed.js
+```
+
+To modify the data, go to the ```constants/index.js``` directory and edit as needed. Then import the appropriate modules and constants accordingly in ```node scripts/seed.js```.
