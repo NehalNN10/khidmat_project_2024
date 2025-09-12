@@ -4,7 +4,7 @@ import Media from '@/lib/models/media';
 import Customer from '@/lib/models/customer';
 import AdoptionStatus from '@/lib/models/adoptionstatus';
 
-export async function POST(req, res) {
+export async function POST(req) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
@@ -16,7 +16,11 @@ export async function POST(req, res) {
     // Check if the database is already seeded
     const existingAnimals = await Animal.countDocuments();
     if (existingAnimals > 0) {
-      return res.status(400).json({ message: 'Database is already seeded.' });
+      return new Response(JSON.stringify({ message: 'Database is already seeded.' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+      // res.status(400).json({ message: 'Database is already seeded.' });
     }
 
     // Seed 50 animals
@@ -68,10 +72,17 @@ export async function POST(req, res) {
     }
 
     await AdoptionStatus.insertMany(adoptionStatuses);
-
-    return res.status(200).json({ message: 'Database seeded successfully!' });
+    return new Response(JSON.stringify({ message: 'Database seeded successfully!' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+    // return res.status(200).json({ message: 'Database seeded successfully!' });
   } catch (error) {
     console.error('Error seeding the database:', error);
-    return res.status(500).json({ message: 'Error seeding the database' });
+    return new Response(JSON.stringify({ message: 'Error seeding the database' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+    // return res.status(500).json({ message: 'Error seeding the database' });
   }
 }

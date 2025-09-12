@@ -1,13 +1,17 @@
 import Hero from "@/components/Hero";
-import FeaturedPets from "@/components/FeaturedPets"
-import BrowseCategories from "@/components/BrowseCategories"
+import { FeaturedPets } from "@/components/FeaturedPets"
+import { PetCategories } from "@/components/PetCategories";
+import { AdoptionProcess } from "@/components/AdoptionProcess";
+
 
 export default function Home() {
   return (
     <>
       <Hero/>
+      <PetCategories/>      
       <FeaturedPets/>
-      <BrowseCategories/>
+      <AdoptionProcess/>
+      {/* <BrowseCategories/> */}
     </>
   );
 }
