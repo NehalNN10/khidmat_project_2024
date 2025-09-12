@@ -25,7 +25,6 @@ const drive = google.drive({
 const FOLDER_TO_MOVE = "3" // testing
 
 export async function GET() {
-  // Debug environment variables first
   console.log('Environment variables check:', {
     CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'Present' : 'Missing',
@@ -43,59 +42,131 @@ export async function GET() {
   }
   
   try {
-    // Test 1: Simple credentials test
-    console.log('Testing credentials...');
-    const testResponse = await drive.files.list({
-      pageSize: 1,
-      fields: 'files(id, name)',
-    });
-    console.log('Credentials test passed:', testResponse.data);
-
-    // Test 2: Check if PARENT_FOLDER_ID exists and is accessible
-    console.log('Testing parent folder access...');
-    const folderTest = await drive.files.get({
-      fileId: PARENT_FOLDER_ID,
-      fields: 'id, name, mimeType'
-    });
-    console.log('Parent folder test passed:', folderTest.data);
-
-    // Step 1: List subfolders within the PARENT_FOLDER
-    const subfoldersResponse = await drive.files.list({
+    // Get all category folders (Cats, Dogs, Bunnies, Birds, Bought)
+    const categoryFoldersResponse = await drive.files.list({
       q: `'${PARENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'`,
       fields: 'files(id, name)',
     });
 
-    const subfolders = subfoldersResponse.data.files;
-    console.log('Subfolders:', subfolders);
+    const categoryFolders = categoryFoldersResponse.data.files;
+    console.log('Category folders:', categoryFolders);
 
-    // Step 2: List images within each subfolder
-    let allImages = [];
-    for (const subfolder of subfolders) {
-      const imagesResponse = await drive.files.list({
-        q: `'${subfolder.id}' in parents and (mimeType='image/jpeg' or mimeType='image/png')`,
-        fields: 'files(id, name, mimeType)',
+    let allAnimals = [];
+    let allMedia = [];
+    let categories = [];
+    let adoptionStatuses = [];
+    let animalCounter = 1;
+    let mediaCounter = 1;
+    let statusCounter = 1;
+
+    // Process each category folder
+    for (const categoryFolder of categoryFolders) {
+      const categoryName = categoryFolder.name;
+      const isBoughtFolder = categoryName.toLowerCase() === 'bought';
+      
+      // Add to categories if not "Bought" folder
+      if (!isBoughtFolder) {
+        categories.push({
+          Category_ID: categories.length + 1,
+          Name: categoryName
+        });
+      }
+
+      // Get animal subfolders within each category
+      const animalFoldersResponse = await drive.files.list({
+        q: `'${categoryFolder.id}' in parents and mimeType='application/vnd.google-apps.folder'`,
+        fields: 'files(id, name)',
       });
-      const images = imagesResponse.data.files.map(file => ({
-        id: file.id,
-        name: file.name,
-        mimeType: file.mimeType,
-        parentFolderName: subfolder.name,
-      }));
-      allImages = allImages.concat(images);
+
+      const animalFolders = animalFoldersResponse.data.files;
+
+      // Process each animal folder
+      for (const animalFolder of animalFolders) {
+        const animalName = animalFolder.name;
+        
+        // Determine category for database
+        let animalCategory;
+        if (isBoughtFolder) {
+          // Extract category from animal name (e.g., "Cat 1" -> "Cats")
+          if (animalName.toLowerCase().startsWith('cat')) animalCategory = 'Cats';
+          else if (animalName.toLowerCase().startsWith('dog')) animalCategory = 'Dogs';
+          else if (animalName.toLowerCase().startsWith('bunny') || animalName.toLowerCase().startsWith('rabbit')) animalCategory = 'Bunnies';
+          else if (animalName.toLowerCase().startsWith('bird')) animalCategory = 'Birds';
+          else animalCategory = 'Unknown';
+        } else {
+          animalCategory = categoryName;
+        }
+
+        // Create animal record
+        const animal = {
+          Animal_ID: animalCounter,
+          Name: animalName,
+          Description: `A lovely ${animalCategory.slice(0, -1).toLowerCase()} looking for a home`, // Remove 's' from category
+          Category: animalCategory
+        };
+        allAnimals.push(animal);
+
+        // Create adoption status record (without Updated_At)
+        const adoptionStatus = {
+          Status_ID: statusCounter,
+          Animal_ID: animalCounter,
+          Customer_ID: null, // You might want to add logic to assign customer IDs for bought pets
+          Status: isBoughtFolder ? 'Adopted' : 'Available'
+        };
+        adoptionStatuses.push(adoptionStatus);
+        statusCounter++;
+
+        // Get media files within the animal folder
+        const mediaResponse = await drive.files.list({
+          q: `'${animalFolder.id}' in parents and (mimeType='image/jpeg' or mimeType='image/png' or mimeType='video/mp4')`,
+          fields: 'files(id, name, mimeType)',
+        });
+
+        const mediaFiles = mediaResponse.data.files;
+
+        // Process each media file
+        for (const mediaFile of mediaFiles) {
+          const mediaType = mediaFile.mimeType.startsWith('image/') ? 'image' : 'video';
+          const mediaUrl = `https://drive.google.com/uc?export=download&id=${mediaFile.id}`;
+
+          const media = {
+            Media_ID: mediaCounter,
+            Media_type: mediaType,
+            Media_URL: mediaUrl,
+            Animal_ID: animalCounter
+          };
+          allMedia.push(media);
+          mediaCounter++;
+        }
+
+        animalCounter++;
+      }
     }
 
-    // Debugging: Log the API response
-    console.log('All Images:', allImages);
+    // Return structured data for database
+    const response = {
+      categories: categories,
+      animals: allAnimals,
+      media: allMedia,
+      adoption_statuses: adoptionStatuses,
+      summary: {
+        total_categories: categories.length,
+        total_animals: allAnimals.length,
+        total_media: allMedia.length,
+        available_animals: adoptionStatuses.filter(status => status.Status === 'Available').length,
+        adopted_animals: adoptionStatuses.filter(status => status.Status === 'Adopted').length
+      }
+    };
 
-    // Return the list of images as JSON
-    return new Response(JSON.stringify({ files: allImages }), {
+    console.log('Database-ready response:', response);
+
+    return new Response(JSON.stringify(response), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
       },
     });
   } catch (error) {
-    // Debugging: Log any errors
     console.error('Detailed error:', {
       message: error.message,
       status: error.status,
@@ -103,7 +174,6 @@ export async function GET() {
       details: error.response?.data
     });
 
-    // Return the error message as JSON
     return new Response(JSON.stringify({ 
       error: error.message,
       details: error.response?.data 
