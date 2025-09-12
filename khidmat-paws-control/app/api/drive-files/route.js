@@ -1,5 +1,8 @@
 import { google } from 'googleapis';
+import {connectToDatabase} from '@/lib/db'; // Import DB connection
+import Media from '@/lib/models/media';
 
+// OAuth2 Setup for Google Drive API
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
