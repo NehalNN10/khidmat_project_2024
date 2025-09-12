@@ -15,7 +15,7 @@ const adoptionStatusSchema = new mongoose.Schema({
   customer_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Customer",
-    required: true,
+    // required: true,
   },
   status: { type: String, required: true },
   updated_at: { type: Date, default: Date.now },
