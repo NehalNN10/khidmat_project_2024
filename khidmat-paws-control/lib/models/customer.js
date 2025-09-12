@@ -11,5 +11,5 @@ const customerSchema = new mongoose.Schema({
   customer_number: { type: String, required: true },
 });
 
-const Customer = mongoose.model("Customer", customerSchema);
+const Customer = mongoose.models.Customer || mongoose.model("Customer", customerSchema);
 module.exports = Customer;

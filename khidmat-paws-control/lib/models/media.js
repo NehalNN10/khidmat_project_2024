@@ -11,5 +11,5 @@ const mediaSchema = new mongoose.Schema({
   },
 });
 
-const Media = mongoose.model("Media", mediaSchema);
+const Media = mongoose.models.Media || mongoose.model("Media", mediaSchema);
 module.exports = Media;

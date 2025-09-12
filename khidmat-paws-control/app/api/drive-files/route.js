@@ -1,6 +1,9 @@
 import { google } from 'googleapis';
-import {connectToDatabase} from '@/lib/db'; // Import DB connection
+import {connectToDatabase} from '@/lib/db'; 
+import Animal from '@/lib/models/animal';  
+import Category from '@/lib/models/category';   
 import Media from '@/lib/models/media';
+import AdoptionStatus from '@/lib/models/adoptionstatus'; 
 
 // OAuth2 Setup for Google Drive API
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -25,9 +28,7 @@ const drive = google.drive({
   auth: oauth2Client,
 });
 
-const FOLDER_TO_MOVE = "3" // testing
-
-export async function GET() {
+export async function POST() {
   console.log('Environment variables check:', {
     CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'Present' : 'Missing',
@@ -45,6 +46,9 @@ export async function GET() {
   }
   
   try {
+    // Connect to database
+    await connectToDatabase();
+
     // Get all category folders (Cats, Dogs, Bunnies, Birds, Bought)
     const categoryFoldersResponse = await drive.files.list({
       q: `'${PARENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'`,
@@ -54,26 +58,32 @@ export async function GET() {
     const categoryFolders = categoryFoldersResponse.data.files;
     console.log('Category folders:', categoryFolders);
 
-    let allAnimals = [];
-    let allMedia = [];
-    let categories = [];
-    let adoptionStatuses = [];
-    let animalCounter = 1;
-    let mediaCounter = 1;
-    let statusCounter = 1;
+    // Get or create categories in database (excluding Bought folder)
+    const categoryMap = {};
+    for (const categoryFolder of categoryFolders) {
+      const categoryName = categoryFolder.name;
+      const isBoughtFolder = categoryName.toLowerCase() === 'bought';
+      
+      if (!isBoughtFolder) {
+        let category = await Category.findOne({ name: categoryName });
+        if (!category) {
+          category = await Category.create({ name: categoryName });
+          console.log(`Created new category: ${categoryName}`);
+        }
+        categoryMap[categoryName] = category._id;
+      }
+    }
+
+    // Track animals in bought folder to update their adoption status if required
+    const boughtAnimals = new Set();
+    let createdAnimals = 0;
+    let updatedStatuses = 0;
+    let createdMedia = 0;
 
     // Process each category folder
     for (const categoryFolder of categoryFolders) {
       const categoryName = categoryFolder.name;
       const isBoughtFolder = categoryName.toLowerCase() === 'bought';
-      
-      // Add to categories if not "Bought" folder
-      if (!isBoughtFolder) {
-        categories.push({
-          Category_ID: categories.length + 1,
-          Name: categoryName
-        });
-      }
 
       // Get animal subfolders within each category
       const animalFoldersResponse = await drive.files.list({
@@ -87,37 +97,34 @@ export async function GET() {
       for (const animalFolder of animalFolders) {
         const animalName = animalFolder.name;
         
-        // Determine category for database
-        let animalCategory;
         if (isBoughtFolder) {
-          // Extract category from animal name (e.g., "Cat 1" -> "Cats")
-          if (animalName.toLowerCase().startsWith('cat')) animalCategory = 'Cats';
-          else if (animalName.toLowerCase().startsWith('dog')) animalCategory = 'Dogs';
-          else if (animalName.toLowerCase().startsWith('bunny') || animalName.toLowerCase().startsWith('rabbit')) animalCategory = 'Bunnies';
-          else if (animalName.toLowerCase().startsWith('bird')) animalCategory = 'Birds';
-          else animalCategory = 'Unknown';
-        } else {
-          animalCategory = categoryName;
+          // Just track that this animal is in bought folder
+          boughtAnimals.add(animalName);
+          console.log(`Found ${animalName} in Bought folder`);
+          continue; // Nothing more needed - assumption: no animal's first appearance will be in the bought folder
         }
 
-        // Create animal record
-        const animal = {
-          Animal_ID: animalCounter,
-          Name: animalName,
-          Description: `A lovely ${animalCategory.slice(0, -1).toLowerCase()} looking for a home`, // Remove 's' from category
-          Category: animalCategory
-        };
-        allAnimals.push(animal);
+        // For regular category folders: create/update animal
+        let animal = await Animal.findOne({ name: animalName });
+        
+        if (!animal) {
+          // Create new animal (first time seeing it)
+          animal = await Animal.create({
+            name: animalName,
+            description: `A lovely ${categoryName.slice(0, -1).toLowerCase()} looking for a home`,
+            category_id: categoryMap[categoryName],
+            species: categoryName.slice(0, -1),
+          });
+          console.log(`Created new animal: ${animalName} in category ${categoryName}`);
+          createdAnimals++;
 
-        // Create adoption status record (without Updated_At)
-        const adoptionStatus = {
-          Status_ID: statusCounter,
-          Animal_ID: animalCounter,
-          Customer_ID: null, // You might want to add logic to assign customer IDs for bought pets
-          Status: isBoughtFolder ? 'Adopted' : 'Available'
-        };
-        adoptionStatuses.push(adoptionStatus);
-        statusCounter++;
+          // Create initial adoption status (always Available for new animals)
+          await AdoptionStatus.create({
+            animal_id: animal._id, 
+            status: 'Available',
+            customer_id: null
+          });
+        }
 
         // Get media files within the animal folder
         const mediaResponse = await drive.files.list({
@@ -127,41 +134,78 @@ export async function GET() {
 
         const mediaFiles = mediaResponse.data.files;
 
-        // Process each media file
+        // Create media records (only new ones)
         for (const mediaFile of mediaFiles) {
           const mediaType = mediaFile.mimeType.startsWith('image/') ? 'image' : 'video';
           const mediaUrl = `https://drive.google.com/uc?export=download&id=${mediaFile.id}`;
 
-          const media = {
-            Media_ID: mediaCounter,
-            Media_type: mediaType,
-            Media_URL: mediaUrl,
-            Animal_ID: animalCounter
-          };
-          allMedia.push(media);
-          mediaCounter++;
-        }
+          const existingMedia = await Media.findOne({ 
+            media_url: mediaUrl, 
+            animal_id: animal._id 
+          });
 
-        animalCounter++;
+          if (!existingMedia) {
+            await Media.create({
+              media_type: mediaType,
+              media_url: mediaUrl,
+              animal_id: animal._id 
+            });
+            console.log(`Added new media: ${mediaFile.name} for ${animalName}`);
+            createdMedia++;
+          }
+        }
       }
     }
 
-    // Return structured data for database
+    // Now update adoption statuses based on bought folder contents
+    const allAnimals = await Animal.find({});
+    
+    for (const animal of allAnimals) {
+      const adoptionStatus = await AdoptionStatus.findOne({ animal_id: animal._id });
+      
+      if (adoptionStatus) {
+        const isInBoughtFolder = boughtAnimals.has(animal.name);
+        const shouldBeAdopted = isInBoughtFolder;
+        const currentlyAdopted = adoptionStatus.status === 'Adopted';
+
+        if (shouldBeAdopted && !currentlyAdopted) {
+          // Animal moved TO bought folder
+          adoptionStatus.status = 'Adopted';
+          await adoptionStatus.save();
+          console.log(`✅ ${animal.name} moved to Bought -> status changed to Adopted`);
+          updatedStatuses++;
+        } else if (!shouldBeAdopted && currentlyAdopted) {
+          // Animal moved BACK FROM bought folder
+          adoptionStatus.status = 'Available';
+          adoptionStatus.customer_id = null; // Clear customer
+          await adoptionStatus.save();
+          console.log(`🔄 ${animal.name} moved back from Bought -> status changed to Available`);
+          updatedStatuses++;
+        }
+      }
+    }
+
+    const animalCount = await Animal.countDocuments();
+    const categoryCount = await Category.countDocuments();
+    const mediaCount = await Media.countDocuments();
+    const adoptionStatusCount = await AdoptionStatus.countDocuments();
+
     const response = {
-      categories: categories,
-      animals: allAnimals,
-      media: allMedia,
-      adoption_statuses: adoptionStatuses,
+      message: 'Database updated successfully from Google Drive!',
+      changes: {
+        animals_created: createdAnimals,
+        adoption_statuses_updated: updatedStatuses,
+        media_created: createdMedia
+      },
       summary: {
-        total_categories: categories.length,
-        total_animals: allAnimals.length,
-        total_media: allMedia.length,
-        available_animals: adoptionStatuses.filter(status => status.Status === 'Available').length,
-        adopted_animals: adoptionStatuses.filter(status => status.Status === 'Adopted').length
+        total_categories: categoryCount,
+        total_animals: animalCount,
+        total_media: mediaCount,
+        total_adoption_statuses: adoptionStatusCount
       }
     };
 
-    console.log('Database-ready response:', response);
+    console.log('Database update completed:', response);
 
     return new Response(JSON.stringify(response), {
       status: 200,
@@ -183,54 +227,6 @@ export async function GET() {
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
-    });
-  }
-}
-
-// New function to move the folder "3" into the "BOUGHT" folder
-// export async function moveFolderToBought() {
-export async function POST() {
-  try {
-    // Step 1: Find the folder ID by name
-    const folderResponse = await drive.files.list({
-      q: `'${PARENT_FOLDER_ID}' in parents and name='${FOLDER_TO_MOVE}' and mimeType='application/vnd.google-apps.folder'`,
-      fields: 'files(id, name)',
-    });
-
-    const folder = folderResponse.data.files[0];
-    if (!folder) {
-      throw new Error(`Folder with name "${FOLDER_TO_MOVE}" not found.`);
-    }
-
-    const folderId = folder.id;
-
-    // Step 2: Move the folder to the "BOUGHT" folder
-    const moveResponse = await drive.files.update({
-      fileId: folderId,
-      addParents: BOUGHT_FOLDER_ID,
-      removeParents: PARENT_FOLDER_ID,
-      fields: 'id, parents',
-    });
-
-    console.log('Move Response:', moveResponse.data);
-
-    // Return the move response as JSON
-    return new Response(JSON.stringify({ moveResponse: moveResponse.data }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  } catch (error) {
-    // Debugging: Log any errors
-    console.error('Move Folder Error:', error);
-
-    // Return the error message as JSON
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
   }
 }

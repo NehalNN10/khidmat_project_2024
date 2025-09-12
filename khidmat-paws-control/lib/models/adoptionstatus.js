@@ -21,5 +21,5 @@ const adoptionStatusSchema = new mongoose.Schema({
   updated_at: { type: Date, default: Date.now },
 });
 
-const AdoptionStatus = mongoose.model("AdoptionStatus", adoptionStatusSchema);
+const AdoptionStatus = mongoose.models.AdoptionStatus || mongoose.model("AdoptionStatus", adoptionStatusSchema);
 module.exports = AdoptionStatus;
