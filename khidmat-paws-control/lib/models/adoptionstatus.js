@@ -6,11 +6,6 @@ const adoptionStatusSchema = new mongoose.Schema({
     ref: "Animal",
     required: true,
   },
-  customer_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Customer",
-    // required: true,
-  },
   status: { type: String, required: true },
   updated_at: { type: Date, default: Date.now },
 });

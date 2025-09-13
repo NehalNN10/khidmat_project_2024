@@ -13,8 +13,7 @@ export async function GET() {
     const animals = await Animal.find({}).populate('category_id');
     const media = await Media.find({}).populate('animal_id');
     const adoptionStatuses = await AdoptionStatus.find({})
-      .populate('animal_id')
-      .populate('customer_id');
+      .populate('animal_id');
 
     // Get counts
     const counts = {

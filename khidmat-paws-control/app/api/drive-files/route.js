@@ -49,35 +49,35 @@ export async function POST() {
     // Connect to database
     await connectToDatabase();
 
-    // try {
-    //   await Animal.collection.drop();
-    //   console.log('Dropped animals collection');
-    // } catch (error) {
-    //   console.log('Animals collection did not exist');
-    // }
+    try {
+      await Animal.collection.drop();
+      console.log('Dropped animals collection');
+    } catch (error) {
+      console.log('Animals collection did not exist');
+    }
 
-    // try {
-    //   await Category.collection.drop();
-    //   console.log('Dropped categories collection');
-    // } catch (error) {
-    //   console.log('Categories collection did not exist');
-    // }
+    try {
+      await Category.collection.drop();
+      console.log('Dropped categories collection');
+    } catch (error) {
+      console.log('Categories collection did not exist');
+    }
 
-    // try {
-    //   await Media.collection.drop();
-    //   console.log('Dropped media collection');
-    // } catch (error) {
-    //   console.log('Media collection did not exist');
-    // }
+    try {
+      await Media.collection.drop();
+      console.log('Dropped media collection');
+    } catch (error) {
+      console.log('Media collection did not exist');
+    }
 
-    // try {
-    //   await AdoptionStatus.collection.drop();
-    //   console.log('Dropped adoption statuses collection');
-    // } catch (error) {
-    //   console.log('Adoption statuses collection did not exist');
-    // }
+    try {
+      await AdoptionStatus.collection.drop();
+      console.log('Dropped adoption statuses collection');
+    } catch (error) {
+      console.log('Adoption statuses collection did not exist');
+    }
     
-    // console.log('All collections dropped - starting fresh');
+    console.log('All collections dropped - starting fresh');
 
     // Get all category folders (Cats, Dogs, Bunnies, Birds, Bought)
     const categoryFoldersResponse = await drive.files.list({
@@ -150,8 +150,7 @@ export async function POST() {
           // Create initial adoption status (always Available for new animals)
           await AdoptionStatus.create({
             animal_id: animal._id, 
-            status: 'Available',
-            customer_id: null
+            status: 'Available'
           });
         }
 
@@ -206,7 +205,6 @@ export async function POST() {
         } else if (!shouldBeAdopted && currentlyAdopted) {
           // Animal moved BACK FROM bought folder
           adoptionStatus.status = 'Available';
-          adoptionStatus.customer_id = null; // Clear customer
           await adoptionStatus.save();
           console.log(`🔄 ${animal.name} moved back from Bought -> status changed to Available`);
           updatedStatuses++;
