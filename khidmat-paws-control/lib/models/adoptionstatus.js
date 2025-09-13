@@ -1,12 +1,6 @@
 const mongoose = require("mongoose");
 
 const adoptionStatusSchema = new mongoose.Schema({
-  status_id: {
-    type: Number,
-    required: true,
-    unique: true,
-    autoIncrement: true,
-  },
   animal_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Animal",

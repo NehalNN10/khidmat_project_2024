@@ -49,6 +49,36 @@ export async function POST() {
     // Connect to database
     await connectToDatabase();
 
+    // try {
+    //   await Animal.collection.drop();
+    //   console.log('Dropped animals collection');
+    // } catch (error) {
+    //   console.log('Animals collection did not exist');
+    // }
+
+    // try {
+    //   await Category.collection.drop();
+    //   console.log('Dropped categories collection');
+    // } catch (error) {
+    //   console.log('Categories collection did not exist');
+    // }
+
+    // try {
+    //   await Media.collection.drop();
+    //   console.log('Dropped media collection');
+    // } catch (error) {
+    //   console.log('Media collection did not exist');
+    // }
+
+    // try {
+    //   await AdoptionStatus.collection.drop();
+    //   console.log('Dropped adoption statuses collection');
+    // } catch (error) {
+    //   console.log('Adoption statuses collection did not exist');
+    // }
+    
+    // console.log('All collections dropped - starting fresh');
+
     // Get all category folders (Cats, Dogs, Bunnies, Birds, Bought)
     const categoryFoldersResponse = await drive.files.list({
       q: `'${PARENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'`,
@@ -113,7 +143,6 @@ export async function POST() {
             name: animalName,
             description: `A lovely ${categoryName.slice(0, -1).toLowerCase()} looking for a home`,
             category_id: categoryMap[categoryName],
-            species: categoryName.slice(0, -1),
           });
           console.log(`Created new animal: ${animalName} in category ${categoryName}`);
           createdAnimals++;

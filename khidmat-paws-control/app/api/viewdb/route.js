@@ -8,13 +8,13 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    // Get all data with populated references using correct field names
+    // Get all data with populated references
     const categories = await Category.find({});
-    const animals = await Animal.find({}).populate('category_id'); // Changed from 'category'
-    const media = await Media.find({}).populate('animal_id');      // Changed from 'animal'
+    const animals = await Animal.find({}).populate('category_id');
+    const media = await Media.find({}).populate('animal_id');
     const adoptionStatuses = await AdoptionStatus.find({})
-      .populate('animal_id')    // Changed from 'animal'
-      .populate('customer_id'); // Added customer population
+      .populate('animal_id')
+      .populate('customer_id');
 
     // Get counts
     const counts = {
