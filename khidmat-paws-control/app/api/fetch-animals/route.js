@@ -5,7 +5,11 @@ import Category from '@/lib/models/category';
 export async function GET(req, res) {
     try {
         await connectToDatabase(); // Wait for promise to execute
-        const { pet_type } = Object.fromEntries(new URL(req.url).searchParams);
+        const { searchParams } = new URL(req.url);
+        const pet_type = searchParams.get('pet_type');
+        const page = parseInt(searchParams.get('page')) || 1;
+        const limit = parseInt(searchParams.get('limit')) || 12;
+        
         const results = []
         if (!pet_type) {
             // fetch all
@@ -85,5 +89,3 @@ export async function GET(req, res) {
         });
     }
 }
-
-// TODO: Edit so that type of animal is present in DB

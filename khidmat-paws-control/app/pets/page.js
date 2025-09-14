@@ -1,14 +1,6 @@
-import PetCatalogue from "@/components/PetCatalogue"
+// app/pets/page.js
+import PetsPageClient from '@/components/PetsPageClient';
 
-const page = () => {
-  return (
-    <>
-      <h2 className="text-4xl font-bold my-6 text-center underline">
-        Pet Catalogue
-      </h2>
-      <PetCatalogue/>
-    </>
-  )
+export default function PetsPage() {
+  return <PetsPageClient />;
 }
-
-export default page
