@@ -11,7 +11,6 @@ export default function Home() {
       <PetCategories/>      
       <FeaturedPets/>
       <AdoptionProcess/>
-      {/* <BrowseCategories/> */}
     </>
   );
 }

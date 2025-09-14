@@ -2,24 +2,74 @@ import { connectToDatabase } from '@/lib/db'; // Import the connection function
 import Animal from '@/lib/models/animal';
 import Category from '@/lib/models/category';
 
-export async function GET() {
+export async function GET(req, res) {
     try {
         await connectToDatabase(); // Wait for promise to execute
-
-        const cnt = await Animal.countDocuments();
-        console.log(`Total animals in DB: ${cnt}`);
-        
+        const { pet_type } = Object.fromEntries(new URL(req.url).searchParams);
         const results = []
-        const all_categories = await Category.find();
-        console.log('All categories in DB: ', all_categories);
-        
-        // const cats = await Animal.find({species: 'Cat'});
-        // console.log('Cats in DB: ', cats);
-        
-        for (let cat of all_categories) {
-            let animals_in_cat = await Animal.find({category: cat._id});
-            console.log(`Animals in category ${cat.name}: `, animals_in_cat);
-            results.push({category: cat.name, animals: animals_in_cat});
+        if (!pet_type) {
+            // fetch all
+            const animals = await Animal.find();
+            results.push(...animals);
+        }
+        else if (pet_type == "dog") {
+            // fetch dogs
+            const category = await Category.findOne({ name: 'Dogs' });
+            if (category) {
+                const animals = await Animal.find({ category_id: category._id });
+                results.push(...animals);
+            } else {
+                return new Response(JSON.stringify({ error: 'Dog category not found' }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        } 
+        else if (pet_type == "cat") {
+            // fetch cats
+            const category = await Category.findOne({ name: 'Cats' });
+            if (category) {
+                const animals = await Animal.find({ category_id: category._id });
+                results.push(...animals);
+            } else {
+                return new Response(JSON.stringify({ error: 'Cat category not found' }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        } 
+        else if (pet_type == "bunny") {
+            // fetch dogs
+            const category = await Category.findOne({ name: 'Bunnies' });
+            if (category) {
+                const animals = await Animal.find({ category_id: category._id });
+                results.push(...animals);
+            } else {
+                return new Response(JSON.stringify({ error: 'Bunny category not found' }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        } 
+        else if (pet_type == "bird") {
+            // fetch dogs
+            const category = await Category.findOne({ name: 'Birds' });
+            if (category) {
+                const animals = await Animal.find({ category_id: category._id });
+                results.push(...animals);
+            } else {
+                return new Response(JSON.stringify({ error: 'Bird category not found' }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        } 
+        else {
+            // return error for invalid pet_type
+            return new Response(JSON.stringify({ error: 'Invalid pet type' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
         }
         
         return new Response(JSON.stringify(results), {
