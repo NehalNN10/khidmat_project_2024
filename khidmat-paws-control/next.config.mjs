@@ -2,12 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'drive.google.com',
-        pathname: '/uc',
-      },
+    domains: [
+      'drive.google.com',
+      'lh3.googleusercontent.com',
+      'images.unsplash.com',
     ],
   },
 };

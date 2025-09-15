@@ -3,6 +3,7 @@
 
 import { useRouter } from 'next/navigation';
 import { Heart, MapPin, Calendar } from 'lucide-react';
+import Image from 'next/image';
 
 const PetCard = ({ pet, isLiked, onToggleLike }) => {
   const router = useRouter();
@@ -16,9 +17,11 @@ const PetCard = ({ pet, isLiked, onToggleLike }) => {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 group">
       <div className="relative">
-        <img 
+        <Image 
           src={pet.media_url || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop'}
           alt={pet.name}
+          width={400}
+          height={192}
           className="w-full h-48 object-cover group-hover:brightness-110 transition-all"
         />
         
