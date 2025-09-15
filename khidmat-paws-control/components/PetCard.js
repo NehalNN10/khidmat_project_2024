@@ -17,7 +17,7 @@ const PetCard = ({ pet, isLiked, onToggleLike }) => {
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 group">
       <div className="relative">
         <img 
-          src={pet.image || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop'}
+          src={pet.media_url || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop'}
           alt={pet.name}
           className="w-full h-48 object-cover group-hover:brightness-110 transition-all"
         />

@@ -36,13 +36,12 @@ const PetsPageClient = () => {
   const fetchPets = useCallback(async (petType = 'all', pageNum = 1) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: pageNum.toString(),
-        limit: '12'
-      });
+      const params = new URLSearchParams();
+      params.set('page', pageNum.toString());
+      params.set('limit', '12');
       
-      if (petType !== 'all') {
-        params.append('pet_type', petType);
+      if (petType && petType !== 'all') {
+        params.set('pet_type', petType);
       }
 
       const response = await axios.get(`/api/fetch-animals?${params.toString()}`);
@@ -50,7 +49,6 @@ const PetsPageClient = () => {
       // console.log('Fetched pets data:', data);
       
       setPets(data || []);
-      // setPets(data.pets || []);
       setPagination(data.pagination || {
         page: pageNum,
         limit: 12,
