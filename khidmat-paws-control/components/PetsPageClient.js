@@ -7,6 +7,7 @@ import axios from 'axios';
 import CategoryFilter from '@/components/CategoryFilter';
 import PetCard from '@/components/PetCard';
 import Pagination from '@/components/Pagination';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const PetsPageClient = () => {
   const router = useRouter();
@@ -232,17 +233,5 @@ const EmptyState = ({ activeCategory }) => (
         : 'No pets available right now. Check back later for new arrivals.'
       }
     </p>
-  </div>
-);
-
-// components/LoadingSpinner.js
-import { Loader } from 'lucide-react';
-
-const LoadingSpinner = () => (
-  <div className="flex justify-center items-center py-16">
-    <div className="flex items-center gap-3 text-gray-600">
-      <Loader className="w-6 h-6 animate-spin" />
-      <span className="text-lg">Loading pets...</span>
-    </div>
   </div>
 );

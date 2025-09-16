@@ -1,51 +1,65 @@
 import Image from 'next/image'
-import Link from 'next/link'
+// import Link from 'next/link'
 
 const PetDetails = (pet) => {
 
   const handleWhatsAppContact = () => {
-    const message = `Hi, I'm interested in adopting ${pet.name}!`
+    const message = `Hi, I'm interested in adopting ${pet.pet.name}!`
     const whatsappUrl = `https://wa.me/+923001234567?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, '_blank')
   }
+
+  // console.log('Pet details: ', pet.pet);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="md:flex">
           <div className="md:flex-shrink-0">
-            <div className="relative h-64 w-full md:w-96">
-              <Image
-                src={pet.image}
-                alt={pet.name}
-                // fill
-                // className="object-cover"
-                // priority
-                className="object-cover w-full h-full" 
+            {
+              pet.pet.media_urls && pet.pet.media_urls.length > 0 ? (
+                pet.pet.media_urls.map((url, index) => (
+                  <div key={index} className="relative h-64 w-full md:w-96 mb-4">
+                    <Image
+                      src={url}
+                      alt={pet.pet.pet.description}
+                      width={400}
+                      height={192}
+                      className="w-full h-48 object-cover group-hover:brightness-110 transition-all"
+                    />
+                  </div>
+                ))
+              ) : (null)  
+            }
+            {/* <div className="relative h-64 w-full md:w-96">
+              <Image 
+                src={pet.media_urls[0] || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop'}
+                alt={pet.pet.description}
                 width={400}
-                height={300}
+                height={192}
+                className="w-full h-48 object-cover group-hover:brightness-110 transition-all"
               />
-            </div>
+            </div> */}
           </div>
           <div className="p-8">
-            <div className="uppercase tracking-wide text-sm text-lightbrown font-semibold">
+            {/* <div className="uppercase tracking-wide text-sm text-lightbrown font-semibold">
               {pet.breed}
-            </div>
-            <h1 className="mt-2 text-3xl font-bold text-gray-900">{pet.name}</h1>
-            <p className="mt-4 text-gray-600">{pet.description}</p>
+            </div> */}
+            <h1 className="mt-2 text-3xl font-bold text-gray-900">{pet.pet.pet.name}</h1>
+            <p className="mt-4 text-gray-600">{pet.pet.pet.description}</p>
             
             <div className="mt-6">
               <div className="flex items-center mb-2">
                 <span className="text-gray-700 font-medium">Age:</span>
-                <span className="ml-2 text-gray-600">{pet.age}</span>
+                <span className="ml-2 text-gray-600">{pet.pet.pet.age || "1 year"}</span>
               </div>
-              <div className="flex items-center mb-2">
+              {/* <div className="flex items-center mb-2">
                 <span className="text-gray-700 font-medium">Gender:</span>
                 <span className="ml-2 text-gray-600">{pet.gender}</span>
-              </div>
+              </div> */}
               <div className="flex items-center">
                 <span className="text-gray-700 font-medium">Category:</span>
-                <span className="ml-2 text-gray-600">{pet.category}</span>
+                <span className="ml-2 text-gray-600">{pet.pet.category}</span>
               </div>
             </div>
 
