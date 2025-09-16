@@ -26,11 +26,11 @@ const PetsPageClient = () => {
   const [likedPets, setLikedPets] = useState(new Set());
 
   const categories = [
-    { key: 'all', label: 'All Pets', count: null },
-    { key: 'dog', label: 'Dogs', count: 47 },
-    { key: 'cat', label: 'Cats', count: 32 },
-    { key: 'bird', label: 'Birds', count: 15 },
-    { key: 'bunny', label: 'Bunnies', count: 23 }
+    { key: 'all', label: 'All Pets' },
+    { key: 'dog', label: 'Dogs' },
+    { key: 'cat', label: 'Cats' },
+    { key: 'bird', label: 'Birds' },
+    { key: 'bunny', label: 'Bunnies' }
   ];
 
   // Fetch pets from API with pagination

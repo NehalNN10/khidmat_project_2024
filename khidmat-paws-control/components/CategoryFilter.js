@@ -21,15 +21,6 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => (
               }`}
             >
               {category.label}
-              {category.count && (
-                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                  activeCategory === category.key
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-200 text-gray-600'
-                }`}>
-                  {category.count}
-                </span>
-              )}
             </button>
           ))}
         </div>

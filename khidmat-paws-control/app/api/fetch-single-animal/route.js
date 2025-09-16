@@ -1,6 +1,7 @@
 import { connectToDatabase } from '@/lib/db';
 import Animal from '@/lib/models/animal';
 import Media from '@/lib/models/media';
+import Category from '@/lib/models/category';
 
 export async function GET(req) {
   try {
@@ -16,7 +17,7 @@ export async function GET(req) {
           status: 404,
           headers: { 'Content-Type': 'application/json' },
         });
-      }
+			}
 			const media_urls = [];
 
 			const media = await Media.find({ animal_id: pet._id });
@@ -25,9 +26,17 @@ export async function GET(req) {
 				media_urls.push(media[i].media_url);
 				// }
 			}
-			console.log('Media URLs: ', media_urls);
-			pet.media_urls = media_urls;
-			const result = {pet, media_urls};
+			// console.log('Media URLs: ', media_urls);
+			
+			const category = await Category.findOne({ _id: pet.category_id });
+			if (!category) {
+				return new Response(JSON.stringify({ error: 'Category not found' }), {
+					status: 404,
+					headers: { 'Content-Type': 'application/json' },
+				});	
+			}
+
+			const result = {pet, media_urls, category: category.name };
 			console.log('Fetched pet: ', result);
 
 			return new Response(JSON.stringify(result), {

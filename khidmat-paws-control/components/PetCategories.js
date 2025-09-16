@@ -4,7 +4,6 @@ export const PetCategories = () => {
   const categories = [
     {
       name: 'Dogs',
-      count: 47,
       image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop',
       link: '/browse?category=dogs',
       bgColor: 'bg-blue-50 hover:bg-blue-100',
@@ -12,7 +11,6 @@ export const PetCategories = () => {
     },
     {
       name: 'Cats', 
-      count: 32,
       image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop',
       link: '/browse?category=cats',
       bgColor: 'bg-purple-50 hover:bg-purple-100',
@@ -20,7 +18,6 @@ export const PetCategories = () => {
     },
     {
       name: 'Birds',
-      count: 15,
       image: 'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400&h=300&fit=crop',
       link: '/browse?category=birds',
       bgColor: 'bg-green-50 hover:bg-green-100',
@@ -28,7 +25,6 @@ export const PetCategories = () => {
     },
     {
       name: 'Small Pets',
-      count: 23,
       image: 'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&h=300&fit=crop',
       link: '/browse?category=small-pets',
       bgColor: 'bg-orange-50 hover:bg-orange-100',
@@ -60,9 +56,6 @@ export const PetCategories = () => {
                 </div>
                 <div className="text-center">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{category.name}</h3>
-                  <p className={`${category.iconColor} font-medium`}>
-                    {category.count} available
-                  </p>
                 </div>
               </div>
             </Link>
