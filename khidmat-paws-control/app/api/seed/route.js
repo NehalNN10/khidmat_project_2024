@@ -1,7 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
 import Animal from '@/lib/models/animal';
 import Media from '@/lib/models/media';
-import Customer from '@/lib/models/customer';
 import AdoptionStatus from '@/lib/models/adoptionstatus';
 
 export async function POST(req) {
@@ -49,23 +48,11 @@ export async function POST(req) {
 
     await Media.insertMany(media);
 
-    // Seed 50 customers
-    const customers = [];
-    for (let i = 1; i <= 50; i++) {
-      customers.push({
-        name: `Customer ${i}`,
-      });
-    }
-
-    const insertedCustomers = await Customer.insertMany(customers);
-
     // Seed adoption statuses (1 status for each animal)
     const adoptionStatuses = [];
     for (const animal of insertedAnimals) {
-      const customer = insertedCustomers[Math.floor(Math.random() * insertedCustomers.length)];
       adoptionStatuses.push({
         animal_id: animal._id,
-        customer_id: customer._id,
         status: animal.status === 'Available' ? 'Pending' : 'Adopted',
         updated_at: new Date(),
       });
