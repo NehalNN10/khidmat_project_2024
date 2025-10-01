@@ -1,23 +1,26 @@
 import { syncWithGoogleDrive } from '@/lib/syncService';
 
-export async function GET(request) {
-  // Verify this is coming from your cron service (optional security)
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+export async function GET() {
+  console.log('🔔 Cron job triggered at:', new Date().toISOString());
 
   try {
     const result = await syncWithGoogleDrive();
     
-    return new Response(JSON.stringify(result), {
-      status: result.success ? 200 : 500,
+    return new Response(JSON.stringify({
+      message: 'Cron job completed successfully',
+      timestamp: new Date().toISOString(),
+      ...result
+    }), {
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error('❌ Cron job failed:', error);
+    
     return new Response(JSON.stringify({ 
-      success: false, 
-      error: error.message 
+      message: 'Cron job failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
