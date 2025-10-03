@@ -53,21 +53,16 @@
 //   });
 // }
 
-// lib/googleAuth.js
 import { google } from 'googleapis';
 
-console.log('🔍 Debugging service account setup:');
-console.log('CLIENT_EMAIL:', process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
-console.log('PROJECT_ID:', process.env.GOOGLE_PROJECT_ID);
-console.log('HAS_PRIVATE_KEY:', !!process.env.GOOGLE_PRIVATE_KEY);
+// Use the full service account JSON
+const serviceAccountKey = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+
+console.log('🔍 Service account email from JSON:', serviceAccountKey.client_email);
+console.log('🔍 Project ID from JSON:', serviceAccountKey.project_id);
 
 const serviceAccountAuth = new google.auth.GoogleAuth({
-  credentials: {
-    type: "service_account",
-    project_id: process.env.GOOGLE_PROJECT_ID,
-    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-  },
+  credentials: serviceAccountKey,
   scopes: ['https://www.googleapis.com/auth/drive'],
 });
 
@@ -77,7 +72,3 @@ export function getDriveClient() {
     auth: serviceAccountAuth,
   });
 }
-
-// Remove these functions (no longer needed):
-// - getOAuth2Client()
-// - refreshAccessToken()
