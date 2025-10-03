@@ -11,8 +11,6 @@ export async function syncWithGoogleDrive() {
   console.log('🔄 Starting Google Drive sync...');
   
   try {
-    // // Ensure we have a fresh token
-    // await refreshAccessToken();
     
     const drive = getDriveClient();
     await connectToDatabase();
