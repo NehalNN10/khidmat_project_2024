@@ -56,6 +56,11 @@
 // lib/googleAuth.js
 import { google } from 'googleapis';
 
+console.log('🔍 Debugging service account setup:');
+console.log('CLIENT_EMAIL:', process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
+console.log('PROJECT_ID:', process.env.GOOGLE_PROJECT_ID);
+console.log('HAS_PRIVATE_KEY:', !!process.env.GOOGLE_PRIVATE_KEY);
+
 const serviceAccountAuth = new google.auth.GoogleAuth({
   credentials: {
     type: "service_account",
