@@ -75,6 +75,7 @@ export async function syncWithGoogleDrive() {
     let createdAnimals = 0;
     let updatedStatuses = 0;
     let createdMedia = 0;
+    let skippedMedia = 0; 
 
     // Process each category folder
     for (const categoryFolder of categoryFolders) {
