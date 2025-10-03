@@ -1,5 +1,5 @@
 import { connectToDatabase } from './db';
-import { getDriveClient, refreshAccessToken } from './googleAuth';
+import { getDriveClient } from './googleAuth';
 import Animal from './models/animal';
 import Category from './models/category';
 import Media from './models/media';
@@ -127,24 +127,39 @@ export async function syncWithGoogleDrive() {
 
         const mediaFiles = mediaResponse.data.files;
 
-        // Create media records
+        // UPDATED: Create media records with filename-based duplicate detection
         for (const mediaFile of mediaFiles) {
           const mediaType = mediaFile.mimeType.startsWith('image/') ? 'image' : 'video';
           const mediaUrl = `https://drive.google.com/thumbnail?id=${mediaFile.id}&sz=s4000`;
 
+          // Check for duplicates by filename instead of URL
           const existingMedia = await Media.findOne({ 
-            media_url: mediaUrl, 
+            filename: mediaFile.name,
             animal_id: animal._id 
           });
 
           if (!existingMedia) {
-            await Media.create({
-              media_type: mediaType,
-              media_url: mediaUrl,
-              animal_id: animal._id
-            });
-            console.log(`📸 Added media: ${mediaFile.name} for ${animalName}`);
-            createdMedia++;
+            try {
+              await Media.create({
+                media_type: mediaType,
+                media_url: mediaUrl,
+                filename: mediaFile.name, // NEW: Add filename field
+                animal_id: animal._id
+              });
+              console.log(`📸 Added media: ${mediaFile.name} for ${animalName}`);
+              createdMedia++;
+            } catch (error) {
+              if (error.code === 11000) {
+                // Duplicate key error - someone else added it first
+                console.log(`⏭️ Duplicate detected (race condition): ${mediaFile.name} for ${animalName}`);
+                skippedMedia++;
+              } else {
+                throw error;
+              }
+            }
+          } else {
+            console.log(`⏭️ Skipped existing media: ${mediaFile.name} for ${animalName}`);
+            skippedMedia++;
           }
         }
       }
@@ -181,7 +196,8 @@ export async function syncWithGoogleDrive() {
       changes: {
         animals_created: createdAnimals,
         adoption_statuses_updated: updatedStatuses,
-        media_created: createdMedia
+        media_created: createdMedia,
+        media_skipped: skippedMedia // NEW: Track skipped duplicates
       }
     };
 
