@@ -33,6 +33,22 @@ export async function GET(req) {
 
     const animals = await Animal.aggregate([
       { $match: matchStage },
+      
+      {
+        $lookup: {
+          from: 'adoptionstatuses',
+          localField: '_id',
+          foreignField: 'animal_id',
+          as: 'adoptionStatus',
+        },
+      },
+      
+      {
+        $match: {
+          'adoptionStatus.status': 'Available'
+        }
+      },
+      
       {
         $lookup: {
           from: 'media',
