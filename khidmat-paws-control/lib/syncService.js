@@ -98,15 +98,15 @@ export async function syncWithGoogleDrive() {
         const animalName = animalFolder.name;
         const folderId = animalFolder.id;
         
+        // Track that we found this folder ID (for both bought and category folders)
+        foundAnimalFolderIds.add(folderId);
+        
         if (isBoughtFolder) {
           // Just track that this animal is in bought folder
           boughtAnimals.add(animalName);
           console.log(`🏠 Found ${animalName} in Bought folder`);
           continue;
         }
-
-        // Track that we found this folder ID
-        foundAnimalFolderIds.add(folderId);
 
         // Look up animal by Drive folder ID first
         let animal = await Animal.findOne({ drive_folder_id: folderId });
