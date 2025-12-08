@@ -200,7 +200,7 @@ export async function syncWithGoogleDrive() {
     }
 
     // Update adoption statuses based on bought folder
-    const remainingAnimals = await Animal.find({});d({});
+    const remainingAnimals = await Animal.find({});
     
     for (const animal of remainingAnimals) {
       const adoptionStatus = await AdoptionStatus.findOne({ animal_id: animal._id });
