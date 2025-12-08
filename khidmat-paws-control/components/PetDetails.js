@@ -13,7 +13,7 @@ const PetDetails = ({ pet }) => {
 
   const handleWhatsAppContact = () => {
     const message = `Hi, I'm interested in adopting ${petData?.name}!`;
-    const whatsappUrl = `https://wa.me/+923001234567?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/+923322224606?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 

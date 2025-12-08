@@ -72,10 +72,13 @@ export async function syncWithGoogleDrive() {
 
     // Track animals in bought folder
     const boughtAnimals = new Set();
+    const foundAnimalFolderIds = new Set(); // Track all animal folders found in Drive
     let createdAnimals = 0;
     let updatedStatuses = 0;
     let createdMedia = 0;
-    let skippedMedia = 0; 
+    let skippedMedia = 0;
+    let renamedAnimals = 0;
+    let deletedAnimals = 0; 
 
     // Process each category folder
     for (const categoryFolder of categoryFolders) {
@@ -93,6 +96,7 @@ export async function syncWithGoogleDrive() {
       // Process each animal folder
       for (const animalFolder of animalFolders) {
         const animalName = animalFolder.name;
+        const folderId = animalFolder.id;
         
         if (isBoughtFolder) {
           // Just track that this animal is in bought folder
@@ -101,14 +105,19 @@ export async function syncWithGoogleDrive() {
           continue;
         }
 
-        // Create/update animal
-        let animal = await Animal.findOne({ name: animalName });
+        // Track that we found this folder ID
+        foundAnimalFolderIds.add(folderId);
+
+        // Look up animal by Drive folder ID first
+        let animal = await Animal.findOne({ drive_folder_id: folderId });
         
         if (!animal) {
+          // New animal - create it
           animal = await Animal.create({
             name: animalName,
             description: `A lovely ${categoryName.slice(0, -1).toLowerCase()} looking for a home`,
             category_id: categoryMap[categoryName],
+            drive_folder_id: folderId,
           });
           console.log(`🐾 Created new animal: ${animalName}`);
           createdAnimals++;
@@ -118,6 +127,13 @@ export async function syncWithGoogleDrive() {
             animal_id: animal._id,
             status: 'Available'
           });
+        } else if (animal.name !== animalName) {
+          // Animal exists but name changed - update it
+          const oldName = animal.name;
+          animal.name = animalName;
+          await animal.save();
+          console.log(`✏️ Renamed animal: ${oldName} → ${animalName}`);
+          renamedAnimals++;
         }
 
         // Get media files
@@ -166,10 +182,27 @@ export async function syncWithGoogleDrive() {
       }
     }
 
-    // Update adoption statuses based on bought folder
+    // Delete animals that no longer exist in Drive
     const allAnimals = await Animal.find({});
     
     for (const animal of allAnimals) {
+      // Only delete if animal has a drive_folder_id and it's not in the found set
+      if (animal.drive_folder_id && !foundAnimalFolderIds.has(animal.drive_folder_id)) {
+        console.log(`🗑️ Deleting animal no longer in Drive: ${animal.name}`);
+        
+        // Delete related records
+        await Media.deleteMany({ animal_id: animal._id });
+        await AdoptionStatus.deleteMany({ animal_id: animal._id });
+        await Animal.deleteOne({ _id: animal._id });
+        
+        deletedAnimals++;
+      }
+    }
+
+    // Update adoption statuses based on bought folder
+    const remainingAnimals = await Animal.find({});d({});
+    
+    for (const animal of remainingAnimals) {
       const adoptionStatus = await AdoptionStatus.findOne({ animal_id: animal._id });
       
       if (adoptionStatus) {
@@ -196,9 +229,11 @@ export async function syncWithGoogleDrive() {
       timestamp: new Date().toISOString(),
       changes: {
         animals_created: createdAnimals,
+        animals_renamed: renamedAnimals,
+        animals_deleted: deletedAnimals,
         adoption_statuses_updated: updatedStatuses,
         media_created: createdMedia,
-        media_skipped: skippedMedia // NEW: Track skipped duplicates
+        media_skipped: skippedMedia
       }
     };
 

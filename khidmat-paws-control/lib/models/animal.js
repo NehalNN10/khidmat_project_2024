@@ -8,6 +8,7 @@ const animalSchema = new mongoose.Schema({
     ref: "Category",
     required: true,
   },
+  drive_folder_id: { type: String, unique: true, sparse: true },
 });
 
 const Animal = mongoose.models.Animal || mongoose.model("Animal", animalSchema);
