@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Heart, Share2, Calendar, Tag, WhatsApp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, Share2, Tag, MessageCircle } from 'lucide-react';
 
 const PetDetails = ({ pet }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -212,7 +212,7 @@ const PetDetails = ({ pet }) => {
                     onClick={handleWhatsAppContact}
                     className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                   >
-                    <WhatsApp className="w-6 h-6 mr-3" />
+                    <MessageCircle className="w-6 h-6 mr-3" />
                     Contact on WhatsApp
                   </button>
                   
