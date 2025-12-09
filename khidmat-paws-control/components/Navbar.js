@@ -9,10 +9,7 @@ const Navbar = () => {
   const pathname = usePathname(); 
 
   const links = [
-    { href: "/drive-files", label: "Drive files" },
     { href: "/pets", label: "View Pets" },
-    { href: "/about", label: "About Us" },
-    { href: "/contact", label: "Contact Us" },
   ];
 
   return (

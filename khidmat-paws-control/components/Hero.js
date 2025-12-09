@@ -35,11 +35,6 @@ const HeroSection = () => {
                 <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
-            <Link href="/about">
-              <button className="bg-white/10 backdrop-blur-sm border border-white/30 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white/20 transition-all transform hover:scale-105 cursor-pointer">
-                Learn More
-              </button>
-            </Link>
           </div>
           
           {/* Stats */}
